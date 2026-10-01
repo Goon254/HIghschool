@@ -1,0 +1,1415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>STUDY QUEST</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #06060f;
+  --bg2: #0c0c1e;
+  --bg3: #12122a;
+  --green: #00ff9f;
+  --red: #ff3355;
+  --yellow: #ffcc00;
+  --blue: #33aaff;
+  --purple: #cc44ff;
+  --cyan: #00ffee;
+  --white: #dde0ff;
+  --dim: #343460;
+  --dim2: #1a1a38;
+  --mute: #8588c0;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+
+body {
+  background: var(--bg);
+  color: var(--white);
+  font-family: 'Press Start 2P', monospace;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* CRT scanlines */
+body::after {
+  content:'';position:fixed;top:0;left:0;right:0;bottom:0;
+  background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.18) 2px,rgba(0,0,0,0.18) 4px);
+  pointer-events:none;z-index:9000;
+}
+/* CRT vignette */
+body::before {
+  content:'';position:fixed;top:0;left:0;right:0;bottom:0;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,10,0.75) 100%);
+  pointer-events:none;z-index:8999;
+}
+
+/* ===== SCREENS ===== */
+.screen{display:none;min-height:100vh;width:100%;}
+.screen.active{display:flex;flex-direction:column;align-items:center;justify-content:center;}
+
+/* ===== UTILS ===== */
+.glow-g{color:var(--green);text-shadow:0 0 8px var(--green),0 0 24px rgba(0,255,159,.4);}
+.glow-r{color:var(--red);text-shadow:0 0 8px var(--red),0 0 24px rgba(255,51,85,.4);}
+.glow-y{color:var(--yellow);text-shadow:0 0 8px var(--yellow),0 0 24px rgba(255,204,0,.4);}
+.glow-b{color:var(--blue);text-shadow:0 0 8px var(--blue),0 0 24px rgba(51,170,255,.4);}
+.glow-p{color:var(--purple);text-shadow:0 0 8px var(--purple),0 0 24px rgba(204,68,255,.4);}
+.glow-c{color:var(--cyan);text-shadow:0 0 8px var(--cyan),0 0 24px rgba(0,255,238,.4);}
+
+@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+.blink{animation:blink 1s step-end infinite;}
+
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+@keyframes bounce-in{
+  0%{transform:scale(0) rotate(-8deg);opacity:0}
+  65%{transform:scale(1.15) rotate(2deg)}
+  100%{transform:scale(1) rotate(0);opacity:1}
+}
+@keyframes slide-up{from{transform:translateY(24px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-7px)}80%{transform:translateX(7px)}}
+@keyframes flash-g{0%{opacity:.45;background:var(--green)}100%{opacity:0;background:var(--green)}}
+@keyframes flash-r{0%{opacity:.45;background:var(--red)}100%{opacity:0;background:var(--red)}}
+@keyframes score-fly{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-55px)}}
+@keyframes twinkle{0%,100%{opacity:.08}50%{opacity:.75}}
+.slide-up{animation:slide-up .3s ease forwards;}
+.bounce-in{animation:bounce-in .3s ease forwards;}
+
+/* ===== PIXEL BOX ===== */
+.pbox{
+  border:3px solid var(--dim);
+  background:var(--bg2);
+  box-shadow:4px 4px 0 var(--dim2), inset 0 0 30px rgba(0,0,40,.3);
+  position:relative;
+}
+
+/* ===== BUTTONS ===== */
+.btn{
+  font-family:'Press Start 2P',monospace;
+  font-size:11px;padding:11px 22px;
+  border:none;cursor:pointer;
+  text-transform:uppercase;letter-spacing:1px;
+  transition:transform .08s;
+  user-select:none;
+}
+.btn:active{transform:translate(3px,3px) !important;}
+.btn:disabled{opacity:.35;cursor:not-allowed;}
+.btn-g{background:var(--green);color:#000;box-shadow:4px 4px 0 #005533,-1px -1px 0 #88ffd0;}
+.btn-g:hover{background:#33ffbb;}
+.btn-r{background:var(--red);color:#fff;box-shadow:4px 4px 0 #660020,-1px -1px 0 #ff88aa;}
+.btn-r:hover{background:#ff6677;}
+.btn-y{background:var(--yellow);color:#000;box-shadow:4px 4px 0 #665500,-1px -1px 0 #ffee88;}
+.btn-y:hover{background:#ffdd44;}
+.btn-b{background:var(--blue);color:#000;box-shadow:4px 4px 0 #003366,-1px -1px 0 #99ccff;}
+.btn-b:hover{background:#55bbff;}
+.btn-d{background:var(--dim);color:var(--white);box-shadow:4px 4px 0 #0d0d22,-1px -1px 0 #555580;}
+.btn-d:hover{background:#454475;}
+.btn-p{background:var(--purple);color:#fff;box-shadow:4px 4px 0 #550088,-1px -1px 0 #ee88ff;}
+.btn-p:hover{background:#dd66ff;}
+.btn-sm{font-size:8px;padding:8px 12px;}
+
+.btn-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
+
+.px-div{
+  height:3px;width:100%;
+  background:repeating-linear-gradient(90deg,var(--dim) 0,var(--dim) 8px,transparent 8px,transparent 16px);
+}
+
+/* ===== STARS BG ===== */
+#stars-bg{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:-1;overflow:hidden;}
+.star{position:absolute;width:2px;height:2px;background:#fff;animation:twinkle var(--d) ease-in-out infinite;}
+
+/* ===== SCREEN FLASH ===== */
+#flash{position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:9500;opacity:0;}
+.flash-g-anim{animation:flash-g .4s ease forwards;}
+.flash-r-anim{animation:flash-r .4s ease forwards;}
+
+/* ===== FEEDBACK OVERLAY ===== */
+#feedback-ov{
+  position:fixed;top:0;left:0;right:0;bottom:0;
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:none;z-index:9200;opacity:0;transition:opacity .15s;
+}
+#feedback-ov.show{opacity:1;}
+#feedback-txt{font-size:clamp(28px,6vw,60px);text-align:center;padding:0 12px;}
+
+/* ===== SCORE POPUP ===== */
+.score-pop{
+  position:fixed;font-size:13px;color:var(--yellow);
+  text-shadow:0 0 8px var(--yellow);
+  pointer-events:none;z-index:9300;
+  animation:score-fly .9s ease forwards;
+  font-family:'Press Start 2P',monospace;
+}
+
+/* ===== HUB (COURSE SELECT) ===== */
+#s-hub{
+  gap:20px;text-align:center;padding:30px 20px 70px;
+  background:radial-gradient(ellipse at 40% 30%, #0d0d3a 0%, var(--bg) 65%);
+}
+.title-main{
+  font-size:clamp(28px,7vw,64px);
+  letter-spacing:6px;line-height:1.2;
+}
+.title-flag{font-size:clamp(32px,6vw,56px);letter-spacing:10px;animation:float 3s ease-in-out infinite;}
+.title-sub{font-size:9px;color:var(--blue);letter-spacing:3px;line-height:1.8;}
+.insert-coin{font-size:10px;color:var(--yellow);animation:blink .85s step-end infinite;}
+.hub-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:18px;max-width:720px;width:100%;
+}
+.course-card{padding:22px 18px !important;text-align:center;}
+.course-emoji{font-size:44px;margin-bottom:10px;}
+.course-name{font-size:12px;line-height:1.7;margin-bottom:6px;}
+.course-top{font-family:'VT323',monospace;font-size:19px;color:var(--yellow);margin-top:6px;}
+
+/* ===== LEVEL SELECT ===== */
+#s-levels{gap:16px;padding:30px 20px 70px;text-align:center;}
+.levels-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:14px;max-width:880px;width:100%;text-align:left;
+}
+.lvl-card{
+  padding:16px;cursor:pointer;
+  transition:transform .15s;
+  border:3px solid var(--dim);
+  background:var(--bg2);
+  box-shadow:4px 4px 0 var(--dim2);
+}
+.lvl-card:hover{transform:translate(-3px,-3px);border-color:var(--yellow) !important;box-shadow:0 0 18px rgba(255,204,0,.3),4px 4px 0 #554400 !important;}
+.lvl-head{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+.lvl-emoji{font-size:30px;}
+.lvl-num{font-size:8px;margin-bottom:3px;}
+.lvl-name{font-size:8px;color:var(--white);line-height:1.7;}
+.lvl-meta{font-family:'VT323',monospace;font-size:18px;color:var(--mute);margin-top:6px;}
+.lvl-stars{font-size:16px;margin-top:4px;letter-spacing:3px;}
+
+.mini-bar{height:8px;background:var(--dim2);border:2px solid var(--dim);margin-top:8px;}
+.mini-bar>div{height:100%;background:var(--green);transition:width .4s ease;}
+.course-progress{width:100%;max-width:520px;}
+.course-progress .mini-bar{height:14px;}
+
+.mode-row{display:flex;gap:0;justify-content:center;}
+.mode-btn{background:var(--bg2);color:var(--mute);border:3px solid var(--dim);font-size:9px;padding:10px 14px;}
+.mode-btn.on{background:var(--yellow);color:#000;border-color:var(--yellow);box-shadow:0 0 14px rgba(255,204,0,.35);}
+.mode-hint{font-family:'VT323',monospace;font-size:19px;color:var(--mute);margin-top:-6px;}
+.source-line{font-size:8px;color:var(--mute);line-height:1.8;}
+
+/* ===== GAME SCREEN ===== */
+#s-game{justify-content:flex-start;padding:0;}
+
+.topbar{
+  width:100%;background:rgba(0,0,0,.7);
+  border-bottom:3px solid var(--dim);
+  padding:8px 16px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:6px;
+  position:sticky;top:0;z-index:100;
+}
+.tb-block{text-align:center;}
+.tb-label{font-size:7px;color:var(--mute);margin-bottom:2px;}
+.tb-val{font-size:12px;}
+.tb-quit{font-size:8px;padding:8px 10px;}
+
+.timer-ring-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.timer-num{font-size:22px;min-width:36px;text-align:center;}
+.tbar-outer{width:90px;height:7px;background:var(--dim);border:2px solid var(--dim);}
+.tbar-inner{height:100%;background:var(--green);transition:width .9s linear,background .3s;}
+
+.prog-outer{width:100%;height:5px;background:var(--dim);}
+.prog-inner{height:100%;background:linear-gradient(90deg,var(--blue),var(--purple));transition:width .4s ease;}
+
+.game-body{
+  flex:1;width:100%;max-width:820px;
+  margin:0 auto;padding:18px 16px 80px;
+  display:flex;flex-direction:column;gap:14px;
+}
+
+.q-label{font-size:8px;color:var(--mute);text-align:center;letter-spacing:2px;line-height:1.8;}
+
+.q-card{
+  padding:22px 24px;text-align:center;
+  min-height:110px;display:flex;align-items:center;justify-content:center;
+}
+.q-text{font-family:'VT323',monospace;font-size:clamp(20px,3.2vw,30px);line-height:1.5;}
+
+.answers-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+
+.ans-btn{
+  font-family:'VT323',monospace;
+  font-size:clamp(17px,2.8vw,24px);
+  padding:14px 12px;
+  cursor:pointer;
+  border:3px solid var(--dim);
+  background:var(--bg2);
+  color:var(--white);
+  text-align:left;
+  line-height:1.4;
+  transition:border-color .1s,background .1s,transform .08s;
+}
+.ans-btn:hover:not(:disabled){
+  border-color:var(--blue);
+  background:rgba(51,170,255,.1);
+  transform:translate(-2px,-2px);
+}
+.ans-btn:active:not(:disabled){transform:translate(0,0);}
+.ans-letter{
+  color:var(--yellow);
+  font-family:'Press Start 2P',monospace;
+  font-size:11px;
+  margin-right:10px;
+}
+.ans-btn.correct{border-color:var(--green);background:rgba(0,255,159,.18);color:var(--green);}
+.ans-btn.wrong{border-color:var(--red);background:rgba(255,51,85,.18);color:var(--red);}
+.ans-btn:disabled{cursor:not-allowed;opacity:.8;}
+.ans-btn.correct:disabled{opacity:1;}
+
+.continue-row{display:flex;justify-content:center;margin-top:4px;}
+
+/* Flashcard */
+.flashcard{padding:28px 24px;text-align:center;cursor:pointer;}
+.fc-reveal-hint{font-size:8px;color:var(--mute);margin-top:14px;animation:blink 1.4s step-end infinite;}
+.fc-answer{
+  font-family:'VT323',monospace;font-size:clamp(20px,3vw,28px);
+  color:var(--green);margin-top:18px;
+  display:none;animation:bounce-in .35s ease forwards;
+  text-shadow:0 0 10px rgba(0,255,159,.4);
+}
+.fc-rate-row{display:flex;gap:14px;justify-content:center;margin-top:4px;flex-wrap:wrap;}
+
+/* Match pairs */
+.match-wrap{width:100%;max-width:700px;margin:0 auto;}
+.match-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.match-col{display:flex;flex-direction:column;gap:10px;}
+.match-item{
+  font-family:'VT323',monospace;font-size:19px;
+  padding:12px;border:3px solid var(--dim);
+  background:var(--bg2);cursor:pointer;
+  text-align:center;line-height:1.4;flex:1;
+  display:flex;align-items:center;justify-content:center;
+  transition:border-color .15s,background .15s;
+}
+.match-item:hover{border-color:var(--blue);background:rgba(51,170,255,.08);}
+.match-item.selected{border-color:var(--yellow);background:rgba(255,204,0,.1);}
+.match-item.matched{border-color:var(--green);background:rgba(0,255,159,.12);color:var(--green);cursor:default;pointer-events:none;}
+.match-item.wrong-flash{border-color:var(--red);animation:shake .35s ease;}
+.match-instructions{font-family:'VT323',monospace;font-size:20px;color:var(--mute);text-align:center;}
+
+/* ===== LEVEL COMPLETE ===== */
+#s-complete{gap:22px;text-align:center;padding:30px 20px 70px;}
+.complete-title{font-size:clamp(14px,3.5vw,22px);letter-spacing:4px;}
+.complete-stars{font-size:42px;letter-spacing:10px;animation:bounce-in .6s ease forwards;}
+.breakdown{
+  font-family:'VT323',monospace;font-size:22px;
+  line-height:2;text-align:left;
+  padding:16px 24px;min-width:280px;
+}
+
+/* ===== GAME OVER ===== */
+#s-gameover{gap:22px;text-align:center;padding:30px 20px 70px;}
+.over-title{font-size:clamp(22px,5vw,42px);letter-spacing:5px;line-height:1.3;}
+.over-info{font-family:'VT323',monospace;font-size:24px;line-height:2.1;}
+.name-input{
+  font-family:'Press Start 2P',monospace;font-size:13px;
+  background:var(--bg2);border:3px solid var(--green);
+  color:var(--green);padding:11px 16px;outline:none;
+  width:260px;text-align:center;
+  box-shadow:0 0 14px rgba(0,255,159,.25);
+}
+.name-input::placeholder{color:var(--dim);}
+.name-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;}
+
+/* ===== LEADERBOARD ===== */
+#s-board{gap:20px;padding:30px 20px 70px;}
+.lb-table{
+  font-family:'VT323',monospace;font-size:21px;
+  width:100%;max-width:620px;border-collapse:collapse;
+}
+.lb-table th{
+  font-family:'Press Start 2P',monospace;font-size:9px;
+  color:var(--yellow);padding:8px 12px;
+  border-bottom:3px solid var(--dim);text-align:left;
+}
+.lb-table td{padding:8px 12px;border-bottom:1px solid rgba(255,255,255,.04);}
+.lb-table tr:hover td{background:rgba(255,255,255,.03);}
+
+/* Audio buttons */
+.audio-btn{
+  position:fixed;bottom:14px;z-index:9600;
+  font-family:'Press Start 2P',monospace;font-size:9px;
+  background:rgba(6,6,15,.85);border:2px solid var(--dim);
+  color:var(--white);padding:8px 11px;cursor:pointer;
+  transition:border-color .2s;
+}
+#music-btn{right:14px;}
+#music-btn:hover{border-color:var(--yellow);}
+#voice-btn{right:160px;}
+#voice-btn:hover{border-color:var(--cyan);}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:600px){
+  .answers-grid{grid-template-columns:1fr;}
+  .levels-grid{grid-template-columns:1fr;}
+  .topbar{padding:6px 10px;}
+  .game-body{padding:12px 10px 80px;}
+  .match-item{font-size:17px;padding:9px 7px;}
+  .timer-num{font-size:16px;}
+  .tbar-outer{width:60px;}
+  .audio-btn{font-size:7px;padding:7px 8px;}
+  #voice-btn{right:118px;}
+}
+</style>
+</head>
+<body>
+
+<div id="stars-bg"></div>
+<div id="flash"></div>
+<div id="feedback-ov"><div id="feedback-txt"></div></div>
+
+<!-- AUDIO CONTROLS -->
+<button class="audio-btn" id="voice-btn" onclick="toggleVoice()">🗣️ VOICE ON</button>
+<button class="audio-btn" id="music-btn" onclick="toggleMusic()">🔇 MUSIC OFF</button>
+
+<!-- ══════════════════════════════════════
+     HUB — COURSE SELECT
+══════════════════════════════════════ -->
+<div class="screen active" id="s-hub">
+  <div class="title-flag">🎮</div>
+
+  <div class="title-main glow-g">STUDY<br>QUEST</div>
+  <div class="title-sub">PICK A CARTRIDGE TO BEGIN</div>
+
+  <div class="px-div" style="max-width:320px;margin:4px 0"></div>
+
+  <div class="hub-grid" id="hub-grid"></div>
+
+  <div class="insert-coin">▶ &nbsp; PRESS START &nbsp; ◀</div>
+</div>
+
+<!-- ══════════════════════════════════════
+     LEVEL SELECT
+══════════════════════════════════════ -->
+<div class="screen" id="s-levels">
+  <div class="title-flag" id="lv-emoji"></div>
+  <h2 style="font-size:clamp(14px,4vw,26px);letter-spacing:4px;" class="glow-g" id="lv-title"></h2>
+  <div class="title-sub" id="lv-sub"></div>
+
+  <div class="course-progress">
+    <div class="mini-bar"><div id="lv-bar" style="width:0%"></div></div>
+    <div class="lvl-meta" id="lv-progress"></div>
+  </div>
+
+  <div class="mode-row">
+    <button class="btn mode-btn" id="mode-arcade" onclick="setMode('arcade')">🎮 ARCADE</button>
+    <button class="btn mode-btn" id="mode-study" onclick="setMode('study')">📖 STUDY</button>
+  </div>
+  <div class="mode-hint" id="mode-hint"></div>
+
+  <div class="px-div" style="max-width:300px;margin:2px 0 6px"></div>
+
+  <div class="levels-grid" id="levels-grid"></div>
+
+  <div class="btn-row" style="margin-top:14px">
+    <button class="btn btn-p" id="btn-review" onclick="startLevel('review')">🔁 REVIEW MISSED</button>
+    <button class="btn btn-b" onclick="showScreen('s-board')">HIGH SCORES</button>
+    <button class="btn btn-d" onclick="showScreen('s-hub')">◀ COURSES</button>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-d btn-sm" id="btn-reset" onclick="resetProgress(this)">RESET PROGRESS</button>
+  </div>
+  <div class="source-line" id="lv-source"></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     GAME SCREEN
+══════════════════════════════════════ -->
+<div class="screen" id="s-game">
+
+  <div class="topbar">
+    <div class="tb-block">
+      <div class="tb-label">SCORE</div>
+      <div class="tb-val glow-y" id="tb-score">000000</div>
+    </div>
+
+    <div class="tb-block" style="max-width:180px">
+      <div class="tb-label">LEVEL</div>
+      <div style="font-size:8px;color:var(--blue);line-height:1.5" id="tb-level">-</div>
+    </div>
+
+    <div class="timer-ring-wrap">
+      <div class="timer-num glow-g" id="tb-timer">15</div>
+      <div class="tbar-outer"><div class="tbar-inner" id="tbar"></div></div>
+    </div>
+
+    <div class="tb-block">
+      <div class="tb-label">COMBO</div>
+      <div class="tb-val glow-p" id="tb-combo">×1</div>
+    </div>
+
+    <div class="tb-block">
+      <div class="tb-label">LIVES</div>
+      <div style="font-size:18px;letter-spacing:3px" id="tb-lives">❤️❤️❤️</div>
+    </div>
+
+    <button class="btn btn-d tb-quit" onclick="quitLevel()">✕ QUIT</button>
+  </div>
+
+  <div class="prog-outer"><div class="prog-inner" id="prog-bar" style="width:0%"></div></div>
+
+  <div class="game-body" id="game-body"></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     LEVEL COMPLETE
+══════════════════════════════════════ -->
+<div class="screen" id="s-complete">
+  <div class="complete-title glow-g">✓ LEVEL COMPLETE!</div>
+  <div class="px-div" style="max-width:300px;margin:4px 0"></div>
+  <div class="complete-stars" id="c-stars">⭐⭐⭐</div>
+  <div class="pbox breakdown" id="c-breakdown"></div>
+  <div class="btn-row">
+    <button class="btn btn-g" id="btn-next" onclick="nextLevel()">NEXT LEVEL ▶</button>
+    <button class="btn btn-y" onclick="showScreen('s-levels')">LEVEL SELECT</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     GAME OVER
+══════════════════════════════════════ -->
+<div class="screen" id="s-gameover">
+  <div class="over-title glow-r" id="go-title">GAME OVER</div>
+  <div class="px-div" style="max-width:280px;margin:4px 0"></div>
+  <div class="over-info">
+    SCORE:&nbsp;<span id="go-score" class="glow-y">0</span><br>
+    LEVEL:&nbsp;<span id="go-level" class="glow-b" style="font-size:18px">-</span>
+  </div>
+  <div class="name-wrap" id="name-wrap"></div>
+  <div class="btn-row">
+    <button class="btn btn-g" onclick="retryLevel()">↺ RETRY</button>
+    <button class="btn btn-d" onclick="showScreen('s-levels')">LEVEL SELECT</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     LEADERBOARD
+══════════════════════════════════════ -->
+<div class="screen" id="s-board">
+  <h2 style="font-size:clamp(12px,3vw,18px);letter-spacing:3px;" class="glow-y">🏆 HIGH SCORES</h2>
+  <div class="title-sub" id="lb-course"></div>
+  <div class="px-div" style="max-width:300px;margin:4px 0 14px"></div>
+  <table class="lb-table">
+    <thead>
+      <tr>
+        <th>#</th><th>NAME</th><th>SCORE</th><th>REACHED</th><th>DATE</th>
+      </tr>
+    </thead>
+    <tbody id="lb-body"></tbody>
+  </table>
+  <div class="btn-row" style="margin-top:16px">
+    <button class="btn btn-d" onclick="showScreen('s-levels')">◀ BACK</button>
+    <button class="btn btn-r" onclick="clearBoard(this)">🗑 CLEAR</button>
+  </div>
+</div>
+
+<script src="data/civics.js"></script>
+<script src="data/cna.js"></script>
+<script>
+/* ============================================================
+   COURSES  (question data lives in data/*.js)
+============================================================ */
+const COURSES = window.COURSES || {};
+const COURSE_ORDER = ['civics','cna'].filter(id=>COURSES[id]);
+let C = null; // active course
+
+// Normalise both data shapes to {id, q, o:[options], a:index, c:correct text, keep}
+COURSE_ORDER.forEach(id=>{
+  COURSES[id].levels.forEach(lv=>lv.questions.forEach((q,i)=>{
+    if(!q.o){ q.o=[q.c,...q.w]; q.a=0; }
+    q.c=q.o[q.a];
+    q.id = q.n!=null ? 'q'+q.n : lv.id+'-'+i;
+  }));
+});
+
+/* ============================================================
+   SAVED PROGRESS  (localStorage)
+============================================================ */
+const store = {
+  get(k,d){ try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v); }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+};
+// progress map: question id → 1 (mastered) or 0 (missed, needs review)
+const getProg  = (c=C)=>store.get('sq_prog_'+c.id,{});
+const setProg  = (p,c=C)=>store.set('sq_prog_'+c.id,p);
+const getStars = (c=C)=>store.get('sq_stars_'+c.id,{});
+const allQs    = c=>c.levels.flatMap(lv=>lv.questions);
+const mastered = (qs,p)=>qs.filter(q=>p[q.id]===1).length;
+const missedQs = (c=C)=>{ const p=getProg(c); return allQs(c).filter(q=>p[q.id]===0); };
+
+function esc(s){ return String(s).replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch])); }
+
+/* ============================================================
+   AUDIO ENGINE  (Web Audio API — no external files)
+============================================================ */
+let AC = null, musicOn = false, musicLoop = null;
+let voiceOn = store.get('sq_voice',true), voiceReady = false;
+
+function ctx(){
+  if(!AC) AC = new(window.AudioContext||window.webkitAudioContext)();
+  return AC;
+}
+
+function tone(freq,type,dur,vol=0.28,delay=0){
+  try{
+    const c=ctx(), o=c.createOscillator(), g=c.createGain();
+    o.connect(g); g.connect(c.destination);
+    o.type=type; o.frequency.setValueAtTime(freq, c.currentTime+delay);
+    g.gain.setValueAtTime(0, c.currentTime+delay);
+    g.gain.linearRampToValueAtTime(vol, c.currentTime+delay+0.012);
+    g.gain.exponentialRampToValueAtTime(0.001, c.currentTime+delay+dur);
+    o.start(c.currentTime+delay); o.stop(c.currentTime+delay+dur+0.05);
+  }catch(e){}
+}
+
+const sfx = {
+  correct(){ tone(523,'square',.1,.22); tone(659,'square',.1,.22,.10); tone(784,'square',.18,.22,.20); tone(1180,'triangle',.09,.16,.12); },
+  wrong(){ tone(220,'sawtooth',.08,.28); tone(180,'sawtooth',.08,.28,.09); tone(130,'sawtooth',.18,.28,.18); tone(95,'triangle',.2,.18,.2); },
+  streak(){ [523,659,784,1047].forEach((f,i)=>tone(f,'square',.1,.2,i*.08)); },
+  mega(){ [392,494,659,784,988,1047].forEach((f,i)=>tone(f,'square',.12,.22,i*.07)); },
+  levelup(){ [392,523,659,784,1047,784,1047].forEach((f,i)=>tone(f,'square',.14,.24,i*.09)); },
+  gameover(){ [392,349,330,294,262].forEach((f,i)=>tone(f,'sawtooth',.22,.3,i*.16)); },
+  tick(){ tone(880,'square',.04,.1); },
+  urgent(){ tone(660,'square',.07,.2); tone(440,'square',.07,.2,.09); },
+  flip(){ tone(440,'sine',.09,.18); tone(880,'sine',.06,.12,.07); },
+  match(){ tone(784,'square',.08,.2); tone(1047,'square',.12,.2,.09); },
+  matchdone(){ [523,659,784,880,1047].forEach((f,i)=>tone(f,'square',.1,.2,i*.06)); },
+  select(){ tone(440,'square',.05,.15); },
+  popGood(){ tone(900,'sine',.035,.18); tone(1280,'sine',.05,.17,.03); },
+  popBad(){ tone(170,'triangle',.05,.2); tone(120,'triangle',.08,.18,.04); }
+};
+
+/* Chiptune background music */
+let bgPlaying=false;
+const MELODY=[
+  [262,.18],[0,.07],[330,.18],[0,.07],[392,.18],[0,.07],[330,.14],[0,.07],
+  [294,.18],[0,.07],[370,.18],[0,.07],[440,.18],[0,.07],[392,.14],[0,.07],
+  [349,.18],[0,.07],[440,.18],[0,.07],[523,.18],[0,.07],[494,.14],[0,.07],
+  [440,.18],[0,.07],[392,.18],[0,.07],[349,.18],[0,.07],[330,.18],[0,.07]
+];
+const BASS=[262,196,220,196,174,196,220,196];
+
+function playBgMusic(){
+  if(!musicOn||bgPlaying)return;
+  bgPlaying=true;
+  let off=0;
+  MELODY.forEach(([f,d])=>{ if(f>0)tone(f,'square',d*.8,.07,off); off+=d; });
+  BASS.forEach((f,i)=>{ if(f>0)tone(f,'triangle',.32,.09,i*.32); });
+  const total=MELODY.reduce((s,[,d])=>s+d,0)*1000+300;
+  musicLoop=setTimeout(()=>{ bgPlaying=false; if(musicOn)playBgMusic(); }, total);
+}
+
+function stopBgMusic(){ bgPlaying=false; if(musicLoop)clearTimeout(musicLoop); }
+
+function toggleMusic(){
+  musicOn=!musicOn;
+  document.getElementById('music-btn').textContent=musicOn?'🎵 MUSIC ON':'🔇 MUSIC OFF';
+  if(musicOn){ bgPlaying=false; playBgMusic(); } else stopBgMusic();
+}
+
+function loadVoicesAndPrime(){
+  if(!('speechSynthesis' in window)) return;
+  speechSynthesis.getVoices();
+  voiceReady = true;
+}
+
+function stopSpeech(){
+  if('speechSynthesis' in window) speechSynthesis.cancel();
+}
+
+function renderVoiceBtn(){
+  document.getElementById('voice-btn').textContent=voiceOn?'🗣️ VOICE ON':'🔕 VOICE OFF';
+}
+
+function toggleVoice(){
+  voiceOn=!voiceOn;
+  store.set('sq_voice',voiceOn);
+  renderVoiceBtn();
+  if(!voiceOn) stopSpeech();
+  else speakCurrentPrompt();
+}
+
+function speakText(txt){
+  if(!voiceOn || !('speechSynthesis' in window) || !txt) return;
+  stopSpeech();
+  const utter = new SpeechSynthesisUtterance(txt);
+  utter.rate = 1;
+  utter.pitch = 1.02;
+  utter.volume = 0.95;
+  const voices = speechSynthesis.getVoices();
+  const pref = voices.find(v=>/en-US/i.test(v.lang) && /(Samantha|Karen|Google|Daniel|Alex)/i.test(v.name))
+    || voices.find(v=>/en-US/i.test(v.lang))
+    || voices[0];
+  if(pref) utter.voice = pref;
+  speechSynthesis.speak(utter);
+}
+
+function speakCurrentPrompt(){
+  if(!voiceOn || !gameActive()) return;
+  const q=S.questions[S.qIdx];
+  if(!q) return;
+  const said=q.q.replace(/_{3,}/g,'blank');
+  let prompt = said;
+  if(S.phase==='match'){
+    prompt = 'Bonus round. Match each question to its correct answer.';
+  } else if(S.phase==='flash'){
+    prompt = `Flashcard. ${said}`;
+  } else {
+    // Read exactly what the player sees, in the order shown.
+    const opts = [...document.querySelectorAll('.ans-btn')].map((btn, i)=>
+      `Option ${String.fromCharCode(65 + i)}. ${btn.dataset.val || ''}`);
+    if(opts.length) prompt = `${said}. ${opts.join('. ')}`;
+  }
+  const run=S.run;
+  setTimeout(()=>{ if(run===S.run && gameActive()) speakText(prompt); }, 220);
+}
+
+/* ============================================================
+   STARS BACKGROUND
+============================================================ */
+(function createStars(){
+  const c=document.getElementById('stars-bg');
+  for(let i=0;i<90;i++){
+    const s=document.createElement('div');
+    s.className='star';
+    s.style.left=Math.random()*100+'%';
+    s.style.top=Math.random()*100+'%';
+    s.style.setProperty('--d',(1.5+Math.random()*3.5)+'s');
+    s.style.animationDelay=(Math.random()*4)+'s';
+    if(Math.random()>.72){s.style.width='3px';s.style.height='3px';}
+    c.appendChild(s);
+  }
+})();
+
+/* ============================================================
+   GAME STATE
+============================================================ */
+let S = {
+  mode: store.get('sq_mode','arcade'), // arcade (timer + lives) | study (no timer, no lives, missed questions come back)
+  lvlRef:0, level:null,                // lvlRef: index into C.levels, or 'review'
+  qIdx:0, score:0, lives:3, maxLives:3,
+  combo:1, streak:0,
+  correct:0, wrong:0, total:0,
+  missed:{}, bonusShown:{},
+  timerVal:15, timerInterval:null,
+  answered:false,
+  questions:[], scoreBefore:0, startTime:0,
+  phase:'mc',                          // mc | flash | match
+  run:0                                // bumped whenever a level starts/ends, cancels stale timeouts
+};
+
+const gameActive = ()=>document.getElementById('s-game').classList.contains('active');
+const studyMode  = ()=>S.mode==='study';
+
+// Schedule a game step; dropped if the player has left the level in the meantime.
+function later(fn,ms){
+  const run=S.run;
+  setTimeout(()=>{ if(run===S.run && gameActive()) fn(); }, ms);
+}
+
+/* ============================================================
+   SCREEN MANAGEMENT
+============================================================ */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+  if(id!=='s-game') stopSpeech();
+  if(id==='s-board') renderBoard();
+  if(id==='s-levels') renderLevels();
+  if(id==='s-hub'){ renderHub(); if(!bgPlaying)playBgMusic(); }
+}
+
+/* ============================================================
+   HUB RENDER
+============================================================ */
+function renderHub(){
+  const grid=document.getElementById('hub-grid');
+  grid.innerHTML='';
+  COURSE_ORDER.forEach(id=>{
+    const c=COURSES[id], qs=allQs(c), done=mastered(qs,getProg(c));
+    const top=getScores(c)[0];
+    const card=document.createElement('div');
+    card.className='lvl-card course-card';
+    card.style.borderColor=c.color;
+    card.innerHTML=`
+      <div class="course-emoji">${c.emoji}</div>
+      <div class="course-name" style="color:${c.color}">${esc(c.name)}</div>
+      <div class="lvl-meta">${c.levels.length} levels · ${qs.length} questions</div>
+      <div class="mini-bar"><div style="width:${(done/qs.length)*100}%;background:${c.color}"></div></div>
+      <div class="lvl-meta">${done} / ${qs.length} mastered</div>
+      <div class="course-top">${top?`🏆 TOP: ${esc(top.name)} — ${top.score}`:'NO HIGH SCORE YET'}</div>`;
+    card.onclick=()=>{ sfx.select(); openCourse(id); };
+    grid.appendChild(card);
+  });
+}
+
+function openCourse(id){
+  if(!C || C.id!==id) S.score=0;
+  C=COURSES[id];
+  showScreen('s-levels');
+}
+
+/* ============================================================
+   LEVEL SELECT RENDER
+============================================================ */
+function setMode(m){
+  S.mode=m; store.set('sq_mode',m); sfx.select();
+  renderMode();
+}
+
+function renderMode(){
+  document.getElementById('mode-arcade').classList.toggle('on',!studyMode());
+  document.getElementById('mode-study').classList.toggle('on',studyMode());
+  document.getElementById('mode-hint').textContent=studyMode()
+    ? 'No timer, no lives. Missed questions come back until you get them.'
+    : `Beat the clock. ${C.lives||3} lives per level. Build combos for big scores.`;
+}
+
+function renderLevels(){
+  const prog=getProg(), stars=getStars(), qs=allQs(C), done=mastered(qs,prog);
+  document.getElementById('lv-emoji').textContent=C.emoji;
+  document.getElementById('lv-title').textContent=C.title;
+  document.getElementById('lv-sub').textContent=C.sub;
+  document.getElementById('lv-source').textContent=C.source;
+  document.getElementById('lv-bar').style.width=(done/qs.length)*100+'%';
+  document.getElementById('lv-progress').textContent = done>=qs.length
+    ? `🏆 ALL ${qs.length} QUESTIONS MASTERED!`
+    : `${done} / ${qs.length} questions mastered`;
+  renderMode();
+
+  const nMissed=missedQs().length;
+  const rev=document.getElementById('btn-review');
+  rev.textContent=`🔁 REVIEW MISSED (${nMissed})`;
+  rev.disabled=!nMissed;
+
+  const reset=document.getElementById('btn-reset');
+  reset.textContent='RESET PROGRESS'; reset.dataset.armed='';
+
+  const grid=document.getElementById('levels-grid');
+  grid.innerHTML='';
+  C.levels.forEach((lv,i)=>{
+    const n=lv.questions.length, got=mastered(lv.questions,prog), st=stars[lv.id]||0;
+    const card=document.createElement('div');
+    card.className='lvl-card';
+    card.style.borderColor=lv.color;
+    card.innerHTML=`
+      <div class="lvl-head">
+        <span class="lvl-emoji">${lv.emoji}</span>
+        <div>
+          <div class="lvl-num" style="color:${lv.color}">LEVEL ${i+1}</div>
+          <div class="lvl-name">${esc(lv.fullTitle)}</div>
+        </div>
+      </div>
+      <div class="mini-bar"><div style="width:${(got/n)*100}%;background:${lv.color}"></div></div>
+      <div class="lvl-meta">${got} / ${n} mastered${got>=n?' ✓':''}</div>
+      <div class="lvl-stars">${'⭐'.repeat(st)}${'☆'.repeat(3-st)}</div>`;
+    card.onclick=()=>{ sfx.select(); startLevel(i); };
+    grid.appendChild(card);
+  });
+}
+
+function resetProgress(btn){
+  if(!btn.dataset.armed){ btn.dataset.armed='1'; btn.textContent='TAP AGAIN TO RESET'; return; }
+  store.del('sq_prog_'+C.id); store.del('sq_stars_'+C.id);
+  S.score=0;
+  renderLevels();
+}
+
+/* ============================================================
+   START / FLOW
+============================================================ */
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+function levelFor(ref){
+  if(ref!=='review') return C.levels[ref];
+  return { id:'review', title:'Review Missed', fullTitle:'Review Missed Questions', emoji:'🔁', questions:missedQs() };
+}
+
+function startLevel(ref){
+  const lv=levelFor(ref);
+  if(!lv || !lv.questions.length) return;
+  S.run++;
+  S.lvlRef=ref; S.level=lv; S.qIdx=0;
+  S.maxLives=C.lives||3; S.lives=S.maxLives; S.combo=1; S.streak=0;
+  S.correct=0; S.wrong=0; S.total=lv.questions.length;
+  S.missed={}; S.bonusShown={};
+  S.scoreBefore=S.score; S.startTime=Date.now();
+  S.questions=shuffle(lv.questions);
+  showScreen('s-game');
+  document.getElementById('tb-level').textContent=lv.title.toUpperCase();
+  renderQuestion();
+}
+
+function retryLevel(){ S.score=S.scoreBefore; startLevel(S.lvlRef); }
+
+function quitLevel(){
+  S.run++; stopTimer(); clearFeedback();
+  S.score=S.scoreBefore;
+  showScreen('s-levels');
+}
+
+function nextLevel(){
+  if(S.lvlRef==='review') showScreen('s-levels');
+  else if(S.lvlRef>=C.levels.length-1) trigGameOver(true); // all levels done
+  else startLevel(S.lvlRef+1);
+}
+
+/* ============================================================
+   RENDER QUESTION
+============================================================ */
+// Seconds allowed for a multiple-choice question; 'auto' scales with how much there is to read.
+function mcSeconds(q){
+  if(typeof C.timer==='number') return C.timer;
+  const chars=q.q.length+q.o.join('').length;
+  return Math.min(45,Math.max(20,Math.round(12+chars/14)));
+}
+
+function renderQuestion(){
+  const total=S.questions.length;
+  document.getElementById('prog-bar').style.width=(S.qIdx/total)*100+'%';
+  updateHUD();
+  S.answered=false;
+
+  const q=S.questions[S.qIdx];
+  // Every 6th question → flashcard; before every 12th → match pairs bonus round
+  const pool = (S.qIdx>0 && S.qIdx%12===0 && !S.bonusShown[S.qIdx]) ? matchPool() : null;
+  // Answers like "All of the above" only make sense next to their options, so those stay multiple choice
+  S.phase = pool ? 'match' : ((S.qIdx+1)%6===0 && !q.keep) ? 'flash' : 'mc';
+
+  const body=document.getElementById('game-body');
+  body.innerHTML='';
+
+  const lbl=document.createElement('div');
+  lbl.className='q-label';
+  const pos='QUESTION '+(S.qIdx+1)+' OF '+total+'&nbsp; &nbsp;';
+  if(S.phase==='match') lbl.innerHTML='🃏 MATCH THE PAIRS — BONUS ROUND!';
+  else if(S.phase==='flash') lbl.innerHTML=pos+'📖 FLASHCARD MODE';
+  else lbl.innerHTML=pos+(S.missed[q.id]?'🔁 SECOND CHANCE':'🎯 MULTIPLE CHOICE');
+  body.appendChild(lbl);
+
+  if(S.phase==='match') renderMatchRound(pool, body);
+  else if(S.phase==='flash') renderFlashcard(q, body);
+  else renderMC(q, body);
+
+  startTimer(S.phase==='match' ? (C.matchSecs||30) : S.phase==='flash' ? 0 : mcSeconds(q));
+  window.scrollTo(0,0);
+  speakCurrentPrompt();
+}
+
+/* ── MULTIPLE CHOICE ── */
+function renderMC(q, body){
+  const card=document.createElement('div');
+  card.className='pbox q-card slide-up';
+  const txt=document.createElement('div');
+  txt.className='q-text'; txt.textContent=q.q;
+  card.appendChild(txt);
+  body.appendChild(card);
+
+  const choices = q.keep ? q.o : shuffle(q.o);
+  const letters=['A','B','C','D'];
+  const grid=document.createElement('div');
+  grid.className='answers-grid';
+
+  choices.forEach((ans,i)=>{
+    const btn=document.createElement('button');
+    btn.className='ans-btn';
+    const l=document.createElement('span');
+    l.className='ans-letter'; l.textContent=letters[i]+'.';
+    btn.appendChild(l); btn.appendChild(document.createTextNode(ans));
+    btn.dataset.val=ans;
+    btn.onclick=()=>pickAnswer(btn, ans===q.c);
+    grid.appendChild(btn);
+  });
+  body.appendChild(grid);
+}
+
+/* ── FLASHCARD ── */
+function renderFlashcard(q, body){
+  const card=document.createElement('div');
+  card.className='pbox flashcard slide-up';
+  card.innerHTML=`
+    <div class="q-text">${esc(q.q)}</div>
+    <div class="fc-reveal-hint">▼ TAP TO REVEAL ANSWER ▼</div>
+    <div class="fc-answer" id="fc-ans">✓ ${esc(q.c)}</div>`;
+  body.appendChild(card);
+
+  const row=document.createElement('div');
+  row.className='fc-rate-row';
+  row.style.display='none';
+
+  card.onclick=()=>{
+    if(row.style.display!=='none') return;
+    sfx.flip();
+    document.getElementById('fc-ans').style.display='block';
+    card.querySelector('.fc-reveal-hint').style.display='none';
+    row.style.display='flex';
+  };
+
+  const gotIt=document.createElement('button');
+  gotIt.className='btn btn-g';
+  gotIt.textContent='✓ GOT IT!';
+  gotIt.onclick=()=>{
+    if(S.answered) return; S.answered=true;
+    stopSpeech();
+    sfx.correct(); sfx.popGood(); flashScreen('g');
+    markResult(q,true);
+    gainPoints(100*S.combo,gotIt);
+    S.streak++; checkStreak(); advanceQ();
+  };
+
+  const missed=document.createElement('button');
+  missed.className='btn btn-r';
+  missed.textContent='✗ MISSED';
+  missed.onclick=()=>{
+    if(S.answered) return; S.answered=true;
+    stopSpeech(); sfx.wrong(); sfx.popBad(); flashScreen('r');
+    S.streak=0; S.combo=1;
+    markResult(q,false);
+    if(loseLife()) advanceQ();
+  };
+
+  row.appendChild(gotIt); row.appendChild(missed);
+  body.appendChild(row);
+}
+
+/* ── MATCH PAIRS ROUND ── */
+let matchState={ selected:null, matched:0, total:0 };
+
+// 4 questions from this level that fit on a tile and have distinct answers (null if there aren't enough)
+function matchPool(){
+  const seen=new Set();
+  const ok=shuffle(S.level.questions).filter(p=>{
+    if(p.keep || p.q.length>120 || p.c.length>60 || seen.has(p.c)) return false;
+    seen.add(p.c); return true;
+  });
+  return ok.length>=4 ? ok.slice(0,4) : null;
+}
+
+function renderMatchRound(pool, body){
+  matchState={ selected:null, matched:0, total:pool.length };
+
+  const inst=document.createElement('div');
+  inst.className='match-instructions';
+  inst.innerHTML='Match each question to its correct answer!<br><span style="font-size:16px">Tap a QUESTION, then tap its ANSWER</span>';
+  body.appendChild(inst);
+
+  const wrap=document.createElement('div');
+  wrap.className='match-wrap';
+  const grid=document.createElement('div');
+  grid.className='match-grid';
+  const qCol=document.createElement('div'), aCol=document.createElement('div');
+  qCol.className='match-col'; aCol.className='match-col';
+
+  pool.forEach((p,i)=>{
+    const qEl=document.createElement('div');
+    qEl.className='match-item';
+    qEl.textContent=p.q;
+    qEl.dataset.type='q'; qEl.dataset.idx=i;
+    qEl.onclick=()=>matchClick(qEl);
+    qCol.appendChild(qEl);
+  });
+
+  shuffle(pool.map((p,i)=>({a:p.c,i}))).forEach(({a,i})=>{
+    const aEl=document.createElement('div');
+    aEl.className='match-item';
+    aEl.textContent=a;
+    aEl.dataset.type='a'; aEl.dataset.idx=i;
+    aEl.onclick=()=>matchClick(aEl);
+    aCol.appendChild(aEl);
+  });
+
+  grid.appendChild(qCol); grid.appendChild(aCol);
+  wrap.appendChild(grid); body.appendChild(wrap);
+}
+
+// The bonus round sits in front of a question; when it ends, that question is asked as normal.
+function endMatchRound(delay){
+  S.bonusShown[S.qIdx]=true;
+  later(renderQuestion,delay);
+}
+
+function matchClick(el){
+  if(S.answered || el.classList.contains('matched'))return;
+  const type=el.dataset.type;
+  const idx=parseInt(el.dataset.idx);
+
+  if(type==='q'){
+    // Pick (or re-pick) a question
+    if(matchState.selected) matchState.selected.el.classList.remove('selected');
+    el.classList.add('selected');
+    matchState.selected={el,idx};
+    sfx.select();
+    return;
+  }
+  if(!matchState.selected) return; // must pick a question first
+
+  const qEl=matchState.selected.el;
+  qEl.classList.remove('selected');
+
+  if(matchState.selected.idx===idx){
+    qEl.classList.add('matched');
+    el.classList.add('matched');
+    sfx.match(); sfx.popGood(); matchState.matched++;
+    gainPoints(150*S.combo, el);
+
+    if(matchState.matched>=matchState.total){
+      S.answered=true; stopTimer();
+      sfx.matchdone();
+      gainPoints(200, el);
+      showFeedback('🏆 ALL MATCHED!','var(--yellow)');
+      setTimeout(clearFeedback,1200);
+      endMatchRound(1300);
+    }
+  } else {
+    el.classList.add('wrong-flash');
+    qEl.classList.add('wrong-flash');
+    setTimeout(()=>{ el.classList.remove('wrong-flash'); qEl.classList.remove('wrong-flash'); },400);
+    sfx.wrong(); sfx.popBad(); S.streak=0; S.combo=1; updateHUD();
+    loseLife();
+  }
+  matchState.selected=null;
+}
+
+/* ============================================================
+   ANSWER PICKING (MC)
+============================================================ */
+function revealCorrect(q){
+  document.querySelectorAll('.ans-btn').forEach(b=>{
+    b.disabled=true;
+    if(b.dataset.val===q.c) b.classList.add('correct');
+  });
+}
+
+// After a miss the player reads the right answer, then moves on when ready.
+function showContinue(){
+  const row=document.createElement('div');
+  row.className='continue-row slide-up';
+  const btn=document.createElement('button');
+  btn.className='btn btn-y'; btn.id='btn-continue';
+  btn.textContent='CONTINUE ▶';
+  btn.onclick=()=>{ row.remove(); advanceQ(); };
+  row.appendChild(btn);
+  document.getElementById('game-body').appendChild(row);
+  btn.scrollIntoView({block:'nearest'});
+}
+
+function pickAnswer(btn, isCorrect){
+  if(S.answered)return;
+  S.answered=true; stopTimer(); stopSpeech();
+  const q=S.questions[S.qIdx];
+  revealCorrect(q);
+
+  if(isCorrect){
+    sfx.correct(); sfx.popGood(); flashScreen('g');
+    S.streak++;
+    markResult(q,true);
+    gainPoints(100*S.combo, btn);
+    checkStreak();
+    showFeedback('✓ CORRECT!','var(--green)');
+    setTimeout(clearFeedback,1000);
+    later(advanceQ,1100);
+  } else {
+    btn.classList.add('wrong');
+    sfx.wrong(); sfx.popBad(); flashScreen('r');
+    S.streak=0; S.combo=1;
+    markResult(q,false);
+    updateHUD();
+    showFeedback('✗ WRONG!','var(--red)');
+    setTimeout(clearFeedback,900);
+    if(loseLife()) showContinue();
+  }
+}
+
+// Record a first-try result for the level tally and save mastery for the course.
+function markResult(q, ok){
+  const p=getProg();
+  if(ok){
+    if(!S.missed[q.id]) S.correct++;
+    p[q.id]=1;
+  } else {
+    S.wrong++;
+    S.missed[q.id]=true;
+    p[q.id]=0;
+    if(studyMode()) S.questions.push(q); // comes back at the end of the level
+  }
+  setProg(p);
+}
+
+/* ============================================================
+   TIMER
+============================================================ */
+function startTimer(secs){
+  clearInterval(S.timerInterval);
+  const bar=document.getElementById('tbar');
+  const num=document.getElementById('tb-timer');
+  bar.style.width='100%'; bar.style.background='var(--green)';
+  num.className='timer-num glow-g';
+  if(secs<=0 || studyMode()){ num.textContent='∞'; return; } // no timer for flashcards or study mode
+  S.timerVal=secs;
+  num.textContent=secs;
+
+  S.timerInterval=setInterval(()=>{
+    S.timerVal--;
+    const pct=(S.timerVal/secs)*100;
+    bar.style.width=pct+'%';
+    num.textContent=S.timerVal;
+
+    if(S.timerVal<=3){ bar.style.background='var(--red)'; num.className='timer-num glow-r'; sfx.urgent(); }
+    else if(S.timerVal<=6){ bar.style.background='var(--yellow)'; num.className='timer-num glow-y'; }
+
+    if(S.timerVal<=0){ stopTimer(); onTimeout(); }
+  },1000);
+}
+
+function stopTimer(){ clearInterval(S.timerInterval); }
+
+function onTimeout(){
+  if(S.answered || !gameActive())return;
+  S.answered=true;
+  stopSpeech();
+  sfx.wrong(); sfx.popBad(); flashScreen('r');
+  S.streak=0; S.combo=1;
+  showFeedback('⏰ TIME UP!','var(--yellow)');
+  setTimeout(clearFeedback,1100);
+
+  if(S.phase==='match'){
+    updateHUD();
+    if(loseLife()) endMatchRound(1300);
+    return;
+  }
+  const q=S.questions[S.qIdx];
+  revealCorrect(q);
+  markResult(q,false);
+  if(loseLife()) showContinue();
+}
+
+/* ============================================================
+   LIVES / SCORE / COMBO
+============================================================ */
+// Returns true while the player is still alive (always, in study mode).
+function loseLife(){
+  if(studyMode()) return true;
+  S.lives--;
+  updateHUD();
+  if(S.lives>0) return true;
+  S.answered=true; stopTimer();
+  later(()=>trigGameOver(),1500);
+  return false;
+}
+
+function gainPoints(pts, nearEl){
+  S.score+=pts; updateHUD();
+  if(nearEl){
+    const pop=document.createElement('div');
+    pop.className='score-pop';
+    pop.textContent='+'+pts;
+    const r=nearEl.getBoundingClientRect();
+    pop.style.left=(r.left+r.width/2-20)+'px';
+    pop.style.top=(r.top-10)+'px';
+    document.body.appendChild(pop);
+    setTimeout(()=>pop.remove(),950);
+  }
+}
+
+function checkStreak(){
+  if(S.streak===3){ S.combo=2; sfx.streak(); showFeedback('🔥 ×2 COMBO!','var(--purple)'); setTimeout(clearFeedback,900); updateHUD(); }
+  else if(S.streak===6){ S.combo=3; sfx.mega(); showFeedback('💥 ×3 MEGA COMBO!','var(--yellow)'); setTimeout(clearFeedback,900); updateHUD(); }
+  else if(S.streak===10){ S.combo=5; sfx.mega(); showFeedback('⚡ ×5 INSANE COMBO!','var(--cyan)'); setTimeout(clearFeedback,900); updateHUD(); }
+}
+
+function updateHUD(){
+  document.getElementById('tb-score').textContent=String(S.score).padStart(6,'0');
+  document.getElementById('tb-combo').textContent='×'+S.combo;
+  document.getElementById('tb-lives').textContent = studyMode() ? '∞'
+    : '❤️'.repeat(Math.max(0,S.lives))+'🖤'.repeat(Math.max(0,S.maxLives-S.lives));
+}
+
+/* ============================================================
+   ADVANCE QUESTION
+============================================================ */
+function advanceQ(){
+  S.qIdx++;
+  if(S.qIdx>=S.questions.length){ stopTimer(); sfx.levelup(); later(levelComplete,400); }
+  else later(renderQuestion,350);
+}
+
+/* ============================================================
+   LEVEL COMPLETE
+============================================================ */
+function levelComplete(){
+  S.run++;
+  const tot=S.total;
+  const acc=S.correct/tot;
+  const stars = acc>=0.85?3 : acc>=0.65?2 : 1;
+  const isReview=S.lvlRef==='review';
+  if(!isReview){
+    const all=getStars();
+    if(stars>(all[S.level.id]||0)){ all[S.level.id]=stars; store.set('sq_stars_'+C.id,all); }
+  }
+
+  const elapsed=Math.floor((Date.now()-S.startTime)/1000);
+  const tBonus=studyMode()?0:Math.max(0,Math.floor((300-elapsed)*3));
+  const pBonus=S.wrong===0?500:0;
+  gainPoints(tBonus+pBonus, null);
+
+  const qs=allQs(C), done=mastered(qs,getProg());
+  document.getElementById('c-stars').textContent='⭐'.repeat(stars)+'☆'.repeat(3-stars);
+  const lvlScore=S.score-S.scoreBefore;
+  document.getElementById('c-breakdown').innerHTML=`
+    <span style="color:var(--white)">FIRST TRY:&nbsp;</span><span class="glow-g">${S.correct}/${tot}</span><br>
+    <span style="color:var(--white)">MISSES:&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="glow-r">${S.wrong}</span><br>
+    ${studyMode()?'':`<span style="color:var(--white)">TIME BONUS:&nbsp;</span><span class="glow-y">+${tBonus}</span><br>`}
+    ${pBonus?`<span style="color:var(--purple)">PERFECT!&nbsp;&nbsp;</span><span class="glow-p">+${pBonus}</span><br>`:''}
+    <div class="px-div" style="margin:8px 0"></div>
+    <span style="color:var(--white)">LVL SCORE:&nbsp;</span><span class="glow-y">${lvlScore}</span><br>
+    <span style="color:var(--white)">TOTAL:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="glow-g">${S.score}</span><br>
+    <span style="color:var(--white)">MASTERED:&nbsp;&nbsp;</span><span class="glow-c">${done}/${qs.length}</span>`;
+
+  const isLast=!isReview && S.lvlRef>=C.levels.length-1;
+  document.getElementById('btn-next').textContent=isReview?'DONE ▶':isLast?'🏆 FINISH!':'NEXT LEVEL ▶';
+  showScreen('s-complete');
+}
+
+/* ============================================================
+   GAME OVER
+============================================================ */
+function trigGameOver(completed=false){
+  S.run++; stopTimer(); clearFeedback();
+  if(completed) sfx.levelup(); else sfx.gameover();
+  const title=document.getElementById('go-title');
+  title.textContent=completed?'QUEST COMPLETE!':'GAME OVER';
+  title.className='over-title '+(completed?'glow-g':'glow-r');
+  document.getElementById('go-score').textContent=S.score;
+  document.getElementById('go-level').textContent=S.level.fullTitle.substring(0,40).toUpperCase();
+  document.getElementById('name-wrap').innerHTML=`
+    <div style="font-size:8px;color:var(--mute)">ENTER YOUR NAME</div>
+    <input type="text" class="name-input" id="name-inp" maxlength="10" placeholder="PLAYER 1">
+    <button class="btn btn-y" onclick="saveScore()">💾 SAVE SCORE</button>`;
+  showScreen('s-gameover');
+}
+
+/* ============================================================
+   FEEDBACK OVERLAY
+============================================================ */
+function showFeedback(txt,col){
+  const ov=document.getElementById('feedback-ov');
+  const t=document.getElementById('feedback-txt');
+  t.textContent=txt; t.style.color=col;
+  t.style.textShadow=`0 0 18px ${col}, 0 0 40px ${col}`;
+  // Re-trigger animation
+  t.classList.remove('bounce-in'); void t.offsetWidth; t.classList.add('bounce-in');
+  ov.classList.add('show');
+}
+function clearFeedback(){ document.getElementById('feedback-ov').classList.remove('show'); }
+
+function flashScreen(c){
+  const el=document.getElementById('flash');
+  el.className='';  void el.offsetWidth;
+  el.classList.add(c==='g'?'flash-g-anim':'flash-r-anim');
+}
+
+/* ============================================================
+   LEADERBOARD  (one per course)
+============================================================ */
+function getScores(c=C){ return store.get(c.scoreKey,[]); }
+
+function saveScore(){
+  const n=(document.getElementById('name-inp').value||'PLAYER 1').toUpperCase().substring(0,10);
+  const sc=getScores();
+  sc.push({ name:n, score:S.score, level:S.level.title, date:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'}) });
+  sc.sort((a,b)=>b.score-a.score); sc.splice(10);
+  store.set(C.scoreKey,sc);
+  document.getElementById('name-wrap').innerHTML='<div class="glow-g" style="font-size:11px">✓ SCORE SAVED!</div>';
+}
+
+function renderBoard(){
+  const sc=getScores();
+  const m=['🥇','🥈','🥉'];
+  document.getElementById('lb-course').textContent=C.name;
+  const tbody=document.getElementById('lb-body');
+  if(!sc.length){
+    tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--mute);padding:24px;font-family:VT323,monospace;font-size:22px">NO SCORES YET — PLAY FIRST!</td></tr>';
+    return;
+  }
+  tbody.innerHTML=sc.map((s,i)=>`
+    <tr>
+      <td>${m[i]||(i+1)}</td>
+      <td style="color:var(--green)">${esc(s.name)}</td>
+      <td style="color:var(--yellow)">${esc(s.score)}</td>
+      <td style="font-size:17px;color:var(--blue)">${esc(s.level)}</td>
+      <td style="font-size:17px;color:var(--mute)">${esc(s.date)}</td>
+    </tr>`).join('');
+}
+
+function clearBoard(btn){
+  if(!btn.dataset.armed){
+    btn.dataset.armed='1'; btn.textContent='TAP AGAIN TO CLEAR';
+    setTimeout(()=>{ btn.dataset.armed=''; btn.textContent='🗑 CLEAR'; },3000);
+    return;
+  }
+  btn.dataset.armed=''; btn.textContent='🗑 CLEAR';
+  store.del(C.scoreKey); renderBoard();
+}
+
+/* ============================================================
+   KEYBOARD  (1–4 or A–D to answer, Enter/Space to continue)
+============================================================ */
+document.addEventListener('keydown',e=>{
+  if(!gameActive() || e.metaKey || e.ctrlKey || e.altKey) return;
+  const k=e.key.toLowerCase();
+  if(k==='enter' || k===' '){
+    const cont=document.getElementById('btn-continue');
+    if(cont){ e.preventDefault(); cont.click(); }
+    return;
+  }
+  if(S.phase!=='mc' || S.answered) return;
+  const i='1234'.indexOf(k)>=0 ? '1234'.indexOf(k) : 'abcd'.indexOf(k);
+  const btn=document.querySelectorAll('.ans-btn')[i];
+  if(i>=0 && btn) btn.click();
+});
+
+/* ============================================================
+   INIT
+============================================================ */
+renderVoiceBtn();
+renderHub();
+
+// Unlock audio on first click (browser policy)
+document.addEventListener('click', function unlock(){
+  if(!AC){
+    AC=new(window.AudioContext||window.webkitAudioContext)();
+    if(musicOn) playBgMusic();
+  }
+  if(!voiceReady){
+    loadVoicesAndPrime();
+    if('speechSynthesis' in window){
+      const u = new SpeechSynthesisUtterance('');
+      speechSynthesis.speak(u);
+      speechSynthesis.cancel();
+    }
+  }
+},{once:true});
+
+if('speechSynthesis' in window){
+  speechSynthesis.onvoiceschanged = loadVoicesAndPrime;
+}
+</script>
+</body>
+</html>
