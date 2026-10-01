@@ -328,6 +328,15 @@ body::before {
 }
 #music-btn:hover{border-color:var(--yellow);}
 
+#voice-btn{
+  position:fixed;bottom:14px;right:130px;z-index:9600;
+  font-family:'Press Start 2P',monospace;font-size:9px;
+  background:rgba(6,6,15,.85);border:2px solid var(--dim);
+  color:var(--white);padding:8px 11px;cursor:pointer;
+  transition:border-color .2s;
+}
+#voice-btn:hover{border-color:var(--cyan);}
+
 /* ===== RESPONSIVE ===== */
 @media(max-width:600px){
   .answers-grid{grid-template-columns:1fr;}
@@ -344,8 +353,9 @@ body::before {
 <div id="flash"></div>
 <div id="feedback-ov"><div id="feedback-txt"></div></div>
 
-<!-- MUSIC BUTTON -->
-<button id="music-btn" onclick="toggleMusic()">🎵 MUSIC</button>
+<!-- AUDIO CONTROLS -->
+<button id="voice-btn" onclick="toggleVoice()">🗣️ VOICE ON</button>
+<button id="music-btn" onclick="toggleMusic()">🔇 MUSIC OFF</button>
 
 <!-- ══════════════════════════════════════
      TITLE SCREEN
@@ -489,7 +499,8 @@ body::before {
 /* ============================================================
    AUDIO ENGINE  (Web Audio API — no external files)
 ============================================================ */
-let AC = null, musicOn = true, musicLoop = null;
+let AC = null, musicOn = false, musicLoop = null;
+let voiceOn = true, voiceReady = false;
 
 function ctx(){
   if(!AC) AC = new(window.AudioContext||window.webkitAudioContext)();
@@ -509,8 +520,8 @@ function tone(freq,type,dur,vol=0.28,delay=0){
 }
 
 const sfx = {
-  correct(){ tone(523,'square',.1,.22); tone(659,'square',.1,.22,.10); tone(784,'square',.18,.22,.20); },
-  wrong(){ tone(220,'sawtooth',.08,.28); tone(180,'sawtooth',.08,.28,.09); tone(130,'sawtooth',.18,.28,.18); },
+  correct(){ tone(523,'square',.1,.22); tone(659,'square',.1,.22,.10); tone(784,'square',.18,.22,.20); tone(1180,'triangle',.09,.16,.12); },
+  wrong(){ tone(220,'sawtooth',.08,.28); tone(180,'sawtooth',.08,.28,.09); tone(130,'sawtooth',.18,.28,.18); tone(95,'triangle',.2,.18,.2); },
   streak(){ [523,659,784,1047].forEach((f,i)=>tone(f,'square',.1,.2,i*.08)); },
   mega(){ [392,494,659,784,988,1047].forEach((f,i)=>tone(f,'square',.12,.22,i*.07)); },
   levelup(){ [392,523,659,784,1047,784,1047].forEach((f,i)=>tone(f,'square',.14,.24,i*.09)); },
@@ -520,7 +531,9 @@ const sfx = {
   flip(){ tone(440,'sine',.09,.18); tone(880,'sine',.06,.12,.07); },
   match(){ tone(784,'square',.08,.2); tone(1047,'square',.12,.2,.09); },
   matchdone(){ [523,659,784,880,1047].forEach((f,i)=>tone(f,'square',.1,.2,i*.06)); },
-  select(){ tone(440,'square',.05,.15); }
+  select(){ tone(440,'square',.05,.15); },
+  popGood(){ tone(900,'sine',.035,.18); tone(1280,'sine',.05,.17,.03); },
+  popBad(){ tone(170,'triangle',.05,.2); tone(120,'triangle',.08,.18,.04); }
 };
 
 /* Chiptune background music */
@@ -547,8 +560,66 @@ function stopBgMusic(){ bgPlaying=false; if(musicLoop)clearTimeout(musicLoop); }
 
 function toggleMusic(){
   musicOn=!musicOn;
-  document.getElementById('music-btn').textContent=musicOn?'🎵 MUSIC':'🔇 MUTED';
+  document.getElementById('music-btn').textContent=musicOn?'🎵 MUSIC ON':'🔇 MUSIC OFF';
   if(musicOn){ bgPlaying=false; playBgMusic(); } else stopBgMusic();
+}
+
+function loadVoicesAndPrime(){
+  if(!('speechSynthesis' in window)) return;
+  speechSynthesis.getVoices();
+  voiceReady = true;
+}
+
+function stopSpeech(){
+  if('speechSynthesis' in window) speechSynthesis.cancel();
+}
+
+function toggleVoice(){
+  voiceOn=!voiceOn;
+  document.getElementById('voice-btn').textContent=voiceOn?'🗣️ VOICE ON':'🔕 VOICE OFF';
+  if(!voiceOn) stopSpeech();
+  else speakCurrentPrompt();
+}
+
+function speakText(txt){
+  if(!voiceOn || !('speechSynthesis' in window) || !txt) return;
+  stopSpeech();
+  const utter = new SpeechSynthesisUtterance(txt);
+  utter.rate = 1;
+  utter.pitch = 1.02;
+  utter.volume = 0.95;
+  const voices = speechSynthesis.getVoices();
+  const pref = voices.find(v=>/en-US/i.test(v.lang) && /(Samantha|Karen|Google|Daniel|Alex)/i.test(v.name))
+    || voices.find(v=>/en-US/i.test(v.lang))
+    || voices[0];
+  if(pref) utter.voice = pref;
+  speechSynthesis.speak(utter);
+}
+
+function speakCurrentPrompt(){
+  if(!voiceOn) return;
+  if(!document.getElementById('s-game').classList.contains('active')) return;
+  const q=S.questions[S.qIdx];
+  if(!q) return;
+  let prompt = q.q;
+  const isMatch = S.qIdx > 0 && S.qIdx % 12 === 0;
+  const isFlash = !isMatch && (S.qIdx+1) % 6 === 0;
+  if(isMatch){
+    prompt = `Bonus round. Match each question to its correct answer. ${q.q}`;
+  } else if(isFlash){
+    prompt = `Flashcard. ${q.q}`;
+  } else {
+    const opts = [...document.querySelectorAll('.ans-btn')].map((btn, i)=>{
+      // Read exactly what the player sees in randomized order.
+      const text = btn.dataset.val || btn.textContent || '';
+      const letter = String.fromCharCode(65 + i);
+      return `Option ${letter}. ${text}`;
+    });
+    if(opts.length){
+      prompt = `${q.q}. ${opts.join('. ')}`;
+    }
+  }
+  setTimeout(()=>speakText(prompt), 220);
 }
 
 /* ============================================================
@@ -957,6 +1028,7 @@ let S = {
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+  if(id!=='s-game') stopSpeech();
   if(id==='s-board') renderBoard();
   if(id==='s-levels') renderLevels();
   if(id==='s-title'){ renderTopScore(); if(!bgPlaying)playBgMusic(); }
@@ -1050,6 +1122,7 @@ function renderQuestion(){
   else renderMC(q, body);
 
   startTimer(isMatch ? 30 : isFlash ? 0 : 15);
+  speakCurrentPrompt();
 }
 
 /* ── MULTIPLE CHOICE ── */
@@ -1100,7 +1173,8 @@ function renderFlashcard(q, body){
   gotIt.className='btn btn-g';
   gotIt.textContent='✓ GOT IT!';
   gotIt.onclick=()=>{
-    sfx.correct(); flashScreen('g');
+    stopSpeech();
+    sfx.correct(); sfx.popGood(); flashScreen('g');
     gainPoints(100*S.combo,gotIt);
     S.streak++; checkStreak(); advanceQ();
   };
@@ -1108,7 +1182,7 @@ function renderFlashcard(q, body){
   const missed=document.createElement('button');
   missed.className='btn btn-r';
   missed.textContent='✗ MISSED';
-  missed.onclick=()=>{ sfx.wrong(); flashScreen('r'); S.streak=0; S.combo=1; hitLife(); advanceQ(); };
+  missed.onclick=()=>{ stopSpeech(); sfx.wrong(); sfx.popBad(); flashScreen('r'); S.streak=0; S.combo=1; hitLife(); advanceQ(); };
 
   row.appendChild(gotIt); row.appendChild(missed);
   body.appendChild(row);
@@ -1188,7 +1262,7 @@ function matchClick(el){
       // Correct match!
       matchState.selected.el.classList.add('matched');
       el.classList.add('matched');
-      sfx.match(); matchState.matched++;
+      sfx.match(); sfx.popGood(); matchState.matched++;
       gainPoints(150*S.combo, el);
 
       if(matchState.matched>=matchState.total){
@@ -1203,7 +1277,7 @@ function matchClick(el){
       el.classList.add('wrong-flash');
       matchState.selected.el.classList.add('wrong-flash');
       setTimeout(()=>{ el.classList.remove('wrong-flash'); matchState.selected.el.classList.remove('wrong-flash'); },400);
-      sfx.wrong(); S.streak=0; S.combo=1; updateHUD();
+      sfx.wrong(); sfx.popBad(); S.streak=0; S.combo=1; updateHUD();
       hitLife(false);
     }
     matchState.selected=null;
@@ -1215,13 +1289,13 @@ function matchClick(el){
 ============================================================ */
 function pickAnswer(btn, isCorrect, correctAns){
   if(S.answered)return;
-  S.answered=true; stopTimer();
+  S.answered=true; stopTimer(); stopSpeech();
 
   document.querySelectorAll('.ans-btn').forEach(b=>b.disabled=true);
 
   if(isCorrect){
     btn.classList.add('correct');
-    sfx.correct(); flashScreen('g');
+    sfx.correct(); sfx.popGood(); flashScreen('g');
     S.streak++; S.correct++;
     const pts=100*S.combo;
     gainPoints(pts, btn);
@@ -1230,7 +1304,7 @@ function pickAnswer(btn, isCorrect, correctAns){
     setTimeout(()=>{ clearFeedback(); advanceQ(); }, 1100);
   } else {
     btn.classList.add('wrong');
-    sfx.wrong(); flashScreen('r');
+    sfx.wrong(); sfx.popBad(); flashScreen('r');
     S.streak=0; S.combo=1; S.wrong++;
     updateHUD();
     document.querySelectorAll('.ans-btn').forEach(b=>{ if(b.dataset.val===correctAns) b.classList.add('correct'); });
@@ -1273,7 +1347,8 @@ function stopTimer(){ clearInterval(S.timerInterval); }
 function onTimeout(){
   if(S.answered)return;
   S.answered=true;
-  sfx.wrong(); flashScreen('r');
+  stopSpeech();
+  sfx.wrong(); sfx.popBad(); flashScreen('r');
   S.streak=0; S.combo=1; S.wrong++;
 
   const q=S.questions[S.qIdx];
@@ -1446,9 +1521,24 @@ renderTopScore();
 
 // Unlock audio on first click (browser policy)
 document.addEventListener('click', function unlock(){
-  if(!AC){ AC=new(window.AudioContext||window.webkitAudioContext)(); playBgMusic(); }
+  if(!AC){
+    AC=new(window.AudioContext||window.webkitAudioContext)();
+    if(musicOn) playBgMusic();
+  }
+  if(!voiceReady){
+    loadVoicesAndPrime();
+    if('speechSynthesis' in window){
+      const u = new SpeechSynthesisUtterance('');
+      speechSynthesis.speak(u);
+      speechSynthesis.cancel();
+    }
+  }
   document.removeEventListener('click',unlock);
 },{once:true});
+
+if('speechSynthesis' in window){
+  speechSynthesis.onvoiceschanged = loadVoicesAndPrime;
+}
 </script>
 </body>
 </html>
